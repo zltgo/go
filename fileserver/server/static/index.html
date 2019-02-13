@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>财富管理系统</title>
+
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="css/styles.css" rel="stylesheet">
+    <style> 
+      .extmenu{
+        padding-left: 0.5em;
+        line-height: 1.2em;
+        list-style: none;
+        cursor:default;
+        display: block;
+      }
+
+      .exta{
+        position: relative;
+        display: block;
+        padding: 5px 5px;
+        white-space: nowrap;
+        color:#5f6468;
+      }
+    </style>
+<!--[if lt IE 9]>
+<script src="js/html5shiv.js"></script>
+<script src="js/respond.min.js"></script>
+<![endif]-->
+
+
+  <script src="lib/vue.min.js"></script>
+  <script src="lib/vue-router.min.js"></script>
+	<script src="lib/jquery-1.11.1.min.js"></script>
+	<script src="lib/bootstrap.min.js"></script>
+  <script src="lib/chart.min.js"></script>
+
+
+</head>
+
+<body id="bodyid" @keyup = "dispkeyinfo">
+	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#sidebar-collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+        <a class="navbar-brand" href="#" style="margin:0 10px;"><span>组织财富库</span></a>
+				<ul class="user-menu">
+					<li class="dropdown pull-right">
+						<a class="dropdown-toggle" data-toggle="dropdown" style="cursor:pointer;"><span class="glyphicon glyphicon-user"></span> <span id="UserName">User</span> <span class="caret"></span></a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a v-link="{ path: '/usrset' }"><span class="glyphicon glyphicon-cog"></span> 信息设置</a></li>
+							<li><a href="/api/logout"><span class="glyphicon glyphicon-log-out"></span> 退出登录</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div><!-- /.container-fluid -->
+	</nav>
+		
+	<div id="sidebar-collapse" class="col-sm-3 col-lg-2 sidebar">
+    <div class="form-group">
+    </div>
+		<ul class="nav menu" id="demo">
+      
+      <modal-slidemenu><!--/.左侧导航-->
+
+      </modal-slidemenu>
+
+		</ul>
+
+    <modal-warnbar> </modal-warnbar>
+
+	</div><!--/.sidebar-->
+	
+	<div id="maincontent" class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
+
+    <router-view v-ref:maincontent v-on:warning-msg="showWarn" is="FileCon"></router-view><!--/.主显示页-->
+	</div>	<!--/.main-->
+
+    <!-------------- 左侧导航  start---------------->
+    <script type="text/x-template" id="leftmenu-template">
+    <component :is='currentView' @leave-this='livenowcom'>
+      <li @click="livenowcom" slot="headctrl">
+				<a style="border-bottom: 1px solid #e5e5e5;cursor:pointer;" title="{{item.alttext}}">
+					<span class="glyphicon" :class="item.icon"></span> {{item.note}}
+          <span class="icon pull-right"><em class="glyphicon glyphicon-random"></em></span>
+				</a>
+      </li>
+    </component>
+    </script>
+    <!-------------- 左侧导航 end ---------------->
+
+    <!-------------- 文件目录导航  start---------------->
+    <script type="text/x-template" id="treemenu-template">
+      <slot name="headctrl"></slot>
+			<div class="form-group" style="padding:10px;margin:0px">
+				<input type="text" class="form-control" placeholder="快速搜索文件" @keyup.enter="dosearch" v-model="searchtext">
+			</div>
+      <div @contextmenu.stop.prevent= "">
+        <item
+          :model="treeData">
+        </item>
+      </div>
+    </script>
+
+    <!-------------- 文件目录导航 end ---------------->
+
+    <!-------------- 树形文件目录  start---------------->
+    <script type="text/x-template" id="item-template">
+      <li class="extmenu">
+        <a @click="openfolder" @dblclick.stop="toggle"  class="exta" title="{{model.name}}">
+          <em class="glyphicon " :class="open?'glyphicon-folder-open':'glyphicon-folder-close'" @click.stop="toggle" style="margin-right:3px;" ></em><span>  {{model.name}}</span>
+        </a>
+        <ul v-show="open" v-if="model.isFolder" class="extmenu">
+          <item
+            v-for="model in model.children"
+            :model="model">
+          </item>
+        </ul>
+      </li>
+    </script>
+    <!-------------- 树形文件目录 end ---------------->
+
+    <!-------------- 系统管理目录  start---------------->
+      <script type="text/x-template" id="leftsidebar-template">
+      <slot name="headctrl"></slot>
+			<li v-for="menu in menuList" class="parent" v-if="menu.status">
+				<a data-toggle="collapse" href="#{{$key}}">
+					<span class="glyphicon {{menu.icon}}"></span> {{menu.note}} <span class="icon pull-right"><em class="glyphicon glyphicon-s glyphicon-plus"></em></span> 
+				</a>
+				<ul class="children collapse" id="{{$key}}" style="cursor:pointer;">
+					<li v-for="submenu in menu.submenu"  v-if="submenu.status">
+						<a @click="doclick(submenu)">
+							<span class="glyphicon {{submenu.icon}}"></span> {{submenu.note}}
+						</a>
+					</li>
+        </ul>
+      </li>
+      </script>
+    <!-------------- 系统管理目录  end ---------------->
+
+    <!-------------- 信息设置  start ---------------->
+    <script type="text/x-template" id="userset-template">
+    <div class="col-md-12">
+      <div class="panel panel-primary">
+          <div class="panel-heading">信息设置</div>
+					<div class="panel-body tabs">
+              <div class="col-md-8">
+					
+						<ul class="nav nav-pills">
+							<li class="active"><a href="#pilltab1" data-toggle="tab">个人信息</a></li>
+							<li><a href="#pilltab2" data-toggle="tab">修改密码</a></li>
+						</ul>
+		
+						<div class="tab-content">
+							<div class="tab-pane fade in active" id="pilltab1">
+                <form role="form" class="form-horizontal">
+                
+                  <div class="form-group">
+                    <label for="Name" class="col-sm-2 control-label">用户名</label>
+                    <div class="col-sm-10">
+                    <p class="form-control-static">{{User.Name}}</p>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="RealName" class="col-sm-2 control-label">姓名</label>
+                    <div class="col-sm-10">
+                    <p class="form-control-static">{{User.RealName}}</p>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="Department" class="col-sm-2 control-label">部门</label>
+                    <div class="col-sm-10">
+                    <p class="form-control-static">{{User.Department}}</p>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="Department" class="col-sm-2 control-label">用户组</label>
+                    <div class="col-sm-10">
+                    <p class="form-control-static">{{User.Class}}</p>
+                    </div>
+                  </div>
+
+							</div>
+							<div class="tab-pane fade" id="pilltab2">
+
+                <form role="form" class="form-horizontal">
+                  <div class="form-group">
+                    <label for="Password" class="col-sm-2 control-label">旧密码</label>
+                    <div class="col-sm-10">
+                      <input id="Password" type="password" class="form-control" placeholder="请输入旧密码" v-model="ResetPwd.OldPassword"><p></p>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="Password" class="col-sm-2 control-label">新密码</label>
+                    <div class="col-sm-10">
+                      <input id="Password" type="password" class="form-control" placeholder="请输入新密码" v-model="ResetPwd.NewPassword"><p></p>
+                    </div>
+                  </div>
+
+                  <div class="form-group" >
+                    <label for="checkpasswords" class="col-sm-2 control-label">确认密码</label>
+                    <div class="col-sm-10">
+                      <input id="checkpasswords" type="password" class="form-control" placeholder="请再次输入新密码" v-model="CheckPasswords"><p></p>
+                    </div>
+                  </div>
+                
+                  <div>
+                    <button type="button" class="btn btn-primary" @click="postEdit">确定修改</button>
+                    <button type="reset" class="btn btn-default">重填</button>
+                  </div>
+                  
+              </form>
+							</div>
+						</div>
+					</div>
+					</div>
+				</div>
+
+    </div>
+
+    </script>
+
+    <!-------------- 用户设置  end ---------------->
+
+    <!-------------- 添加用户  start ---------------->
+
+    <script type="text/x-template" id="form-addusr-template">
+        <div class="col-md-12">
+          <div class="panel panel-primary">
+            <div class="panel-heading">添加用户</div>
+            <div class="panel-body">
+              <div class="col-md-8">
+                <form role="form" class="form-horizontal">
+                
+                  <div class="form-group" :class="{'has-success':!!validation.Name,'has-error':!validation.Name}">
+                    <label for="Name" class="col-sm-2 control-label">用户名</label>
+                    <div class="col-sm-10">
+                      <input id="Name" type="text" class="form-control" placeholder="请输入用户名" v-model="User.Name">
+                    </div>
+                  </div>
+                  <div class="form-group" :class="{'has-success':!!validation.RealName,'has-error':!validation.RealName}">
+                    <label for="RealName" class="col-sm-2 control-label">姓名</label>
+                    <div class="col-sm-10">
+                      <input id="RealName" type="text" class="form-control" placeholder="请输入姓名" v-model="User.RealName">
+                    </div>
+                  </div>
+                  <div class="form-group" :class="{'has-success':!!validation.Department,'has-error':!validation.Department}">
+                    <label for="Department" class="col-sm-2 control-label">部门</label>
+                    <div class="col-sm-10">
+                      <select id="Department" v-model="User.Department" class="form-control">
+                        <option v-for="item in Sysset.Departments" v-bind:value="item">{{item}}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group" :class="{'has-success':!!validation.Class,'has-error':!validation.Class}">
+                    <label for="Class" class="col-sm-2 control-label">用户组</label>
+                    <div class="col-sm-10">
+                      <select id="Class" v-model="User.Class" class="form-control">
+                        <option v-for="item in Sysset.GroupAuthority" v-bind:value="$key">{{$key}}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group" :class="{'has-success':!!validation.Password,'has-error':!validation.Password}">
+                    <label for="Password" class="col-sm-2 control-label">密码</label>
+                    <div class="col-sm-10">
+                      <input id="Password" type="password" class="form-control" placeholder="请输入密码" v-model="User.Password">
+                    </div>
+                  </div>
+
+                  <div class="form-group" :class="{'has-success':!!validation.CheckPasswords,'has-error':!validation.CheckPasswords}">
+                    <label for="checkpasswords" class="col-sm-2 control-label">确认密码</label>
+                    <div class="col-sm-10">
+                      <input id="checkpasswords" type="password" class="form-control" placeholder="请再次输入密码" v-model="CheckPasswords">
+                    </div>
+                  </div>
+                
+                  <div>
+                    <button type="button" class="btn btn-primary" @click="postEdit">添加</button>
+                    <button type="reset" class="btn btn-default">重填</button>
+                  </div>
+                </div>
+                  
+              </form>
+            </div>
+          </div>
+        </div><!-- /.col-->
+  </script>
+    <!-------------- 添加用户  end ---------------->
+
+    <!-------------- 文件列表  start ---------------->
+    <script type="text/x-template" id="filetable-template">
+
+	<div class="modal fade" id="viewdlg" tabindex="-1" role="dialog" aria-labelledby="thismodelLabel" @keyup.esc="endpreview">
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="endpreview">
+				<span aria-hidden="true">&times;<span>
+			</button>
+			<h4 class="modal-title" id="filepre-title">文件预览</h4>
+		  </div>
+		  <div class="modal-body" id="pre-body">
+		  </div>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal" @click="endpreview">关闭</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
+	<div class="modal" id="thedlg" tabindex="-1" role="dialog" aria-labelledby="thismodelLabel" @keyup.esc="cancelEdit">
+	  <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="cancelEdit">
+				<span aria-hidden="true">&times;<span>
+			</button>
+			<h4 class="modal-title">{{editDlgInfo.title}}</h4>
+		  </div>
+		  <div class="modal-body">
+        <template v-if="this.editState==3">
+          <p>若需批量上传文件(夹)，需将待上传文件(夹)进行打包压缩，选择"批量上传"，服务器将自动解压。<br>所支持的压缩包类型有：{{sysSet.ArchiveTable}}。</p>
+          <input class="checkbox-inline" type="checkbox" id="checkbox_uploadFolder" v-model="uploadFolder">
+          <label for="checkbox_uploadFolder">批量上传</label>
+          <input type="file" id="dlg-for-upload-file" class="filestyle" data-input="false" data-icon="true" multiple="multiple" name="Path" accept="{{acceptExt}}" @change="checkuploadfile">
+        </template>
+        <input type="text" id="textinputforfile" class="form-control input-sm" v-model="ReNameValue" placeholder="{{editDlgInfo.placeholder}}" v-else @keyup.enter="postEdit">
+		  </div>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal" @click="cancelEdit">取消</button>
+			<button type="button" class="btn btn-primary" @click="postEdit">确定</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
+
+	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation" >
+  
+		<div class="container-fluid">
+			<div class="navbar-header">
+        <a class="navbar-brand" href="#" style="margin:0 10px;"><span>组织财富库</span></a>
+  <div>
+		  <div class="btn-group navbar-right" role="toolbar" aria-label="..."  style="margin-right:15px;">
+        
+        <button v-for="btn in btnlist" type="button" class="btn btn-default navbar-btn" @click="buttonclick($key)"  v-if="buttonstatus($key)>0&&btn.level<=userLevel" v-bind:class="{'disabled':buttonstatus($key)<2}">
+          <span class="glyphicon {{btn.icon}}"></span><span> {{btn.note}}</span>
+        </button>
+      </div>
+    </div>
+    </div>
+    </div>
+  </nav>
+        <div class="col-md-12" @click="bshowcontext=false">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <a @click="openPath('/')"  style="cursor:pointer;text-decoration:none;color:#fff;font-size:14px"><span class="glyphicon glyphicon-home"></span> </a>
+              <template v-for="unt in urlvec">
+                <template v-if="unt.name != ''">
+                    / <a @click="openPath(unt.url)" style="cursor:pointer;text-decoration:none;color:#fff;font-size:14px" >{{unt.name }}</a>    
+                </template>
+              </template>
+            </div>
+
+            <div class="panel-body">
+
+
+      <table class="table" style="cursor:default;">
+        <thead>
+          <tr>
+            <th v-for="value in columns"
+              @click="sortBy($key)"
+              :class="{active: sortKey == $key}">
+              {{value | capitalize}}
+              
+              <span class="glyphicon" v-show="$key==sortKey"
+                :class="sortOrders[$key] > 0 ? 'glyphicon-chevron-up' : 'glyphicon-chevron-down'">
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="fl_mainbody">
+          <tr v-for="
+            entry in data
+            | filterBy filterKey
+            | orderBy sortKey sortOrders[sortKey] | orderBy 'IsDir' sortOrders[sortKey]" 
+            v-on:dblclick = "openThis(entry)"
+            v-on:mousedown = "selectThis(toRealPath(entry.Path)+entry.Name,$event)" 
+            v-on:contextmenu.stop.prevent = "openmenu"
+            class = "{{selectList[toRealPath(entry.Path)+entry.Name]?'info':''}}"
+            title="{{entry['Name']}}"
+            id="fl_{{toRealPath(entry.Path)+entry.Name}}"
+            >
+            <td v-for="value in columns">
+			<span v-if="entry.IsDir && $key == 'Name'" class="glyphicon glyphicon-folder-close" v-on:contextmenu.stop.prevent= ""></span>
+              {{ShowInfo($key,entry[$key])}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+    </div>
+
+      <context-menu
+        :bshow.sync="bshowcontext"
+        :menus="contextmenu.memus"
+        :posx="contextmenu.posx"
+        :posy="contextmenu.posy"
+        v-on:innercontextmenu="buttonclick">
+      </context-menu>
+
+  </div>
+
+
+
+
+	</script>
+    <!-------------- 文件列表  end ---------------->
+
+
+
+    <!-------------- 上下文菜单  start ---------------->
+  <script type="text/x-template" id="contextmenu-template">
+    <div :class="{'open':bshow}" v-bind:style="posstyle" v-on:contextmenu.stop.prevent= "">
+      <ul class="dropdown-menu">
+        <li v-for="item in menus" @click="postclick($key)">
+          <a>
+            <span v-if="hasicon(item)" class="glyphicon" v-bind:class="item.icon"></span>
+            <span style="margin-left:10px"> {{item.note}}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+	</script>
+    <!-------------- 上下文菜单  end ---------------->
+
+
+
+
+    <!-------------- 下载列表  start ---------------->
+    <script type="text/x-template" id="dllistrtable-template">
+
+  <div class="col-md-12">
+    <div class="panel panel-primary">
+
+      <div class="form-inline  navbar-right" style="margin: 10px 20px;">
+        <button type="button" class="btn btn-default navbar-btn btn-sm" @click="showfilter=!showfilter">
+          <span class="glyphicon" v-bind:class="{'glyphicon-chevron-right':showfilter,'glyphicon-chevron-left':!showfilter}"></span><span> {{showfilter?"":'筛选'}}</span>
+        </button>
+        <template v-if="showfilter">
+          <input type="text" class="form-control input-sm"  v-model="searchInfo.RealName" lazy id="RealName" placeholder="姓名">
+          <input type="text" class="form-control input-sm"  v-model="searchInfo.Department" lazy id="Department" placeholder="单位">
+          <input type="text" class="form-control input-sm"  v-model="searchInfo.Class" lazy id="Class" placeholder="用户组">
+        </template>
+      </div>
+
+      <div class="panel-heading">下载记录</div>
+      <div class="panel-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th v-for="value in columns">
+                  {{value | capitalize}}
+                </th>
+                <th> 下载</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="entry in tabledata" >
+                <td v-for="value in columns">
+                  {{ShowInfo($key,entry[$key])}}
+                </td>
+                <td>
+                  <a style="cursor:pointer;" type="button" class="btn-sm btn-primary" v-if="entry.FileSize>=0"  @click="download(entry)"> 
+                    <span class="glyphicon glyphicon-arrow-down"></span><span>下载</span>
+                  </a>
+                  <span type="button" class="btn-sm" v-else> 已失效</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+      </div>
+
+      <bottom-table
+        :search-info.sync="searchInfo"
+        :total-num="totalNum">
+      </bottom-table>
+
+    </script>
+    <!-------------- 下载列表  end ---------------->
+
+    <!-------------- 表格页脚  start ---------------->
+    <script type="text/x-template" id="bottomtable-template">
+      <div class="fixed-table-pagination">
+
+        <div class="pull-left pagination-detail" style="margin: 5px 0;">
+          <span class="pagination-info">显示第 {{(searchInfo.Page - 1)*searchInfo.OnePageCount + 1}} 至 {{(searchInfo.Page)*searchInfo.OnePageCount>totalNum?totalNum:(searchInfo.Page)*searchInfo.OnePageCount}}条记录 ,共 {{totalNum}} 条记录,每页显示</span>
+          <span class="page-list">
+            <span class="btn-group dropup">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <span class="page-size">{{searchInfo.OnePageCount }}</span>
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu">
+                <li v-for="pageitems in itemsChoose" :class="{active: pageitems==searchInfo.OnePageCount}" style="cursor:pointer;">
+                  <a @click="searchInfo.OnePageCount=pageitems">{{pageitems}}</a>
+                </li>
+              </ul>
+            </span>
+            条
+          </span>
+        </div>
+
+        <div class="pull-right pagination" style="margin: -5px 0;">
+          <ul class="pagination">
+            <li v-for="unt in pageshow" v-bind:class=[unt.class,unt.page==searchInfo.Page?'disabled':''] @click="searchInfo.Page=unt.page" style="cursor:pointer">
+              <a>{{unt.note}}</a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </script>
+    
+
+    <!-------------- 用户列表  start ---------------->
+    <script type="text/x-template" id="usertable-template">
+
+      <div class="modal" id="modifyuserdlg" tabindex="-1" role="dialog" aria-labelledby="thismodelLabel">
+        <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;<span>
+          </button>
+          <h4 class="modal-title">修改用户信息</h4>
+          </div>
+          <div class="modal-body" @click="alert('fefefe')">
+            <label for="Name">用户名</label>
+            <input type="text" class="form-control"  v-model="nowSelect.Name" id="Name">
+            <label for="RealName">姓名</label>
+            <input type="text" class="form-control"  v-model="nowSelect.RealName" id="RealName">
+            <label for="Department">单位</label>
+            <select id="Department" v-model="nowSelect.Department" class="form-control">
+              <option v-for="item in Sysset.Departments" v-bind:value="item">{{item}}</option>
+            </select>
+            <label for="Class">用户组</label>
+            <select id="Class" v-model="nowSelect.Class" class="form-control">
+              <option v-for="item in Sysset.GroupAuthority" v-bind:value="$key">{{$key}}</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" @click="postEdit">确定</button>
+          </div>
+        </div>
+        </div>
+      </div>
+
+
+
+  <div class="col-md-12">
+    <div class="panel panel-primary">
+      <div class="form-inline  navbar-right" style="margin: 10px 20px;">
+        <button type="button" class="btn btn-default navbar-btn btn-sm" @click="this.$route.router.go({path:'/addusr'})">
+          <span class="glyphicon glyphicon-plus"></span><span> 添加新用户</span>
+        </button>
+      </div>
+      <div class="panel-heading">用户列表</div>
+      <div class="panel-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th v-for="value in columns">
+                  {{value | capitalize}}
+                </th>
+                <th> 修改</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="
+                entry in tabledata
+                | orderBy 'Uid'" 
+                >
+                <td v-for="value in columns">
+                  {{ShowInfo($key,entry[$key])}}
+                </td>
+                <td  style="cursor:default;">
+                  <a type="button" class="btn-sm btn-info" @click="edit(entry)"> 
+                    <span class="glyphicon glyphicon-pencil"></span><span>修改</span>
+                  </a>  
+                  <a type="button" class="btn-sm btn-danger" @click="deleteusr(entry)"  data-toggle="modal" > 
+                    <span class="glyphicon glyphicon-remove"></span><span>删除</span>
+                  </a>
+              </tr>
+            </tbody>
+          </table>
+      </div>
+
+
+      <bottom-table
+        :search-info.sync="searchInfo"
+        :total-num="totalNum">
+      </bottom-table>
+
+        </div>
+      </div>
+
+    </script>
+    <!-------------- 用户列表  end ---------------->
+
+    <!-------------- 下载统计  start ---------------->
+    <script type="text/x-template" id="dlcounttable-template">
+
+  <div class="col-md-12">
+    <div class="panel panel-primary">
+      <div class="panel-heading form-inline  navbar-right" style="margin: 0px 20px;">
+          <span class="page-list">
+            <span class="btn-group dropdown">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <span class="page-size">{{timeoption[searchInfo.Day]}}</span>
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu">
+                <li v-for="dayitems in timeoption" :class="{active: $key==searchInfo.Day}" style="cursor:pointer;">
+                  <a @click="searchInfo.Day=parseInt($key)">{{dayitems}}</a>
+                </li>
+              </ul>
+            </span>
+          </span>
+
+      </div>
+      <div class="panel-heading">下载排行</div>
+      <div class="panel-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th v-for="value in columns">
+                  {{value | capitalize}}
+                </th>
+                <th> 下载</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="entry in tabledata">
+                <td v-for="value in columns">
+                  {{ShowInfo($key,entry[$key])}}
+                </td>
+                <td>
+                  <a style="cursor:pointer;" type="button" class="btn-sm btn-primary" v-if="entry.FileSize>=0"  @click="download(entry)"> 
+                    <span class="glyphicon glyphicon-arrow-down"></span><span>下载</span>
+                  </a>
+                  <span type="button" class="btn-sm" v-else> 已失效</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+      </div>
+
+
+      <bottom-table
+        :search-info.sync="searchInfo"
+        :total-num="totalNum">
+      </bottom-table>
+
+     </div>
+    </div>
+
+    </script>
+    <!-------------- 下载统计  end ---------------->
+
+    <!-------------- 系统设置  start ---------------->
+    <script type="text/x-template" id="form-sysset-template">
+        <div class="col-md-12">
+          <div class="panel panel-primary">
+            <div class="panel-heading">系统设置信息</div>
+            <div class="panel-body">
+              <div class="col-md-12">
+                <form role="form" class="form-horizontal">
+                
+                  <div class="form-group" v-for="item in globalset">
+                    <label for="$key" class="col-sm-2 control-label">{{$key}}</label>
+                    <div class="col-sm-9">
+                      <p class="form-control-static">{{item | json}}</p>
+                    </div>
+                  </div>
+                  
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+  </script>
+    <!-------------- 系统设置  end ---------------->
+
+    <!-------------- 下载趋势  start ---------------->
+    <script type="text/x-template" id="dlchart-template">
+        <div class="col-md-12">
+
+          <div class="panel panel-info">
+            <div class="panel-heading">{{chartObject[mainchart].title}}</div>
+            <div class="panel-body">
+              <div class="pull-left" :class="{'col-md-10':showlegend,'col-md-12':!showlegend}" >
+                <canvas class="main-chart" id="majorchart" style="height:350px;" height=350></canvas>
+              </div>  <!-------------- 主图表 ---------------->
+
+              <div class="pull-right col-md-2" v-show="showlegend">
+
+                <div class="row" style="margin-top:10px;margin-left:5px;">
+                  <label >显示类型:</label>
+                  <span class="btn-group dropdown">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"  style="min-width:80px;">
+                      <span class="page-size">{{optcharttype[chartObject[mainchart].type]}}</span>
+                      <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" style="cursor:pointer;min-width:0px;" >
+                      <li v-for="obj in optcharttype" @click="updataParm(mainchart,'type',$key)">
+                        <a>{{obj}}</a>
+                      </li>
+                    </ul>
+                  </span>
+                </div>
+
+                <div class="row" style="margin-top:10px;margin-left:5px;" v-show="mainchart=='tendencychart'">
+                  <label >单位时间:</label>
+                  <span class="btn-group dropdown">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"  style="min-width:80px;">
+                      <span class="page-size">{{optdayunit[chartObject.tendencychart.param.Day]}}</span>
+                      <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" style="cursor:pointer;min-width:0px;" >
+                      <li v-for="obj in optdayunit" @click="updataParm('tendencychart','param.Day',$key)">
+                        <a>{{obj}}</a>
+                      </li>
+                    </ul>
+                  </span>
+                </div>
+
+                <div class="row" style="margin-top:10px;margin-left:5px;" v-show="mainchart=='tendencychart'">
+                  <label>显示周期:</label>
+                  <span class="btn-group dropdown">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="min-width:80px;">
+                      <span class="page-size">{{optdaylast[chartObject.tendencychart.param.Limit]}}</span>
+                      <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" style="cursor:pointer;min-width:0px;">
+                      <li  v-for="obj in optdaylast" @click="updataParm('tendencychart','param.Limit',$key)">
+                        <a>{{obj}}</a>
+                      </li>
+                    </ul>
+                  </span>
+                </div>
+
+                <div class="row" style="margin-top:10px;margin-left:5px;" v-show="mainchart!='tendencychart'">
+                  <label>年份限制:</label>
+                  <span class="btn-group dropdown">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" style="min-width:80px;">
+                      <span class="page-size">{{optyearlimit[chartObject[mainchart].param.Year]}}</span>
+                      <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" style="cursor:pointer;min-width:0px;">
+                      <li  v-for="obj in optyearlimit" @click="updataParm(mainchart,'param.Year',$key)">
+                        <a>{{obj}}</a>
+                      </li>
+                    </ul>
+                  </span>
+                </div>
+
+              </div>  <!-------------- 主图表控制部分 ---------------->
+            </div>
+          </div>
+          
+          <div class="row">
+
+            <div class="col-md-6" v-show="$key!=mainchart" v-for="chart in chartObject">
+              <div class="panel panel-info">
+                <div class="panel-heading" @click="changethis">{{chart.title}}</div>
+                <div class="panel-body" @dblclick="mainchart=$key">
+                  <div>
+                    <canvas class="main-chart" id="{{$key}}"  height=250px></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+
+        </div>
+    </script>
+    <!-------------- 下载趋势  end ---------------->
+
+
+    <!-------------- 提示条  start ---------------->
+    <script type="text/x-template" id="warnbar-template">
+      <div id="alertbar" class="alert" role="alert"
+      style="position:fixed;display:none;bottom:5px;cursor:default;z-index:2000;"
+      :class="divclass"
+      @mouseenter="showstate=2" @mouseleave="showstate=0">
+        </span><a href="#" class="pull-right" onclick="showstate=0"><span class="glyphicon glyphicon-remove"></span></a>
+        <span class="glyphicon" :class="iconclass"></span> {{warninfo.text}}
+      </div>
+    </script>
+    <!-------------- 提示条  end ---------------->
+
+
+
+  <script src="javascripts/local.js"></script>
+  <script src="javascripts/mainrouter.js"></script>
+
+	<script>
+
+
+		!function ($) {
+		    $(document).on("click","ul.nav li.parent > a", function(){          
+		        $(this).find('em:first').toggleClass("glyphicon-minus");      
+		    }); 
+		    $(".sidebar ").find('em:first').addClass("glyphicon-plus");
+
+        $("#UserName").text(UserInfo.RealName);
+        
+
+		}(window.jQuery);
+
+		$(window).on('resize', function () {
+		  if ($(window).width() > 768) $('#sidebar-collapse').collapse('show')
+		})
+		$(window).on('resize', function () {
+		  if ($(window).width() <= 767) $('#sidebar-collapse').collapse('hide')
+		})
+    $('#sidebar-collapse').collapse('hide')
+	</script>	
+</body>
+
+</html>

@@ -1,0 +1,25 @@
+{
+    "Names": [
+        "layer1",
+        "layer2"
+    ],
+    "Opts": {
+        "layer1": {
+            "Activation": "ReLU",
+            "Dropout": 0,
+            "Initializer": "",
+            "InputSize": 2,
+            "OutputSize": 4,
+            "_struct_name": "deepmind.FCOpts"
+        },
+        "layer2": {
+            "Activation": "Sigmoid",
+            "Dropout": 0,
+            "Initializer": "",
+            "InputSize": 4,
+            "OutputSize": 2,
+            "_struct_name": "deepmind.FCOpts"
+        }
+    },
+    "_struct_name": "deepmind.LayerOpts"
+}

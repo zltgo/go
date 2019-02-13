@@ -1,0 +1,14 @@
+1) 安装apk到手机的方法
+   adb -devices  //查看设备
+   adb kill-server //如果显示no permissions 则用root重启adb
+       adb -s <serial number> install <apkfile>
+
+2) 下载在线api文档到本地命令（10为递归层级）
+    wget -r -p -np -k -l 10 https://cn.vuejs.org/v2/guide/
+
+3) 修改环境变量
+    gedit /etc/profile
+
+4) 查找yum安装后的可执行文件的目录
+    whereis mongod
+

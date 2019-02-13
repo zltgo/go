@@ -1,0 +1,38 @@
+{
+    "Names": [
+        "layer1",
+        "layer2",
+        "layer3"
+    ],
+    "Opts": {
+        "layer1": {
+            "Activation": "Tanh",
+            "Dropout": 0,
+            "HiddenSize": 30,
+            "InitWh": "",
+            "InitWr": "",
+            "InitWu": "",
+            "InputSize": 2,
+            "_struct_name": "deepmind.GRUOpts"
+        },
+        "layer2": {
+            "Activation": "Tanh",
+            "Dropout": 0,
+            "HiddenSize": 30,
+            "InitWh": "",
+            "InitWr": "",
+            "InitWu": "",
+            "InputSize": 30,
+            "_struct_name": "deepmind.GRUOpts"
+        },
+        "layer3": {
+            "Activation": "Linear",
+            "Dropout": 0,
+            "Initializer": "",
+            "InputSize": 30,
+            "OutputSize": 2,
+            "_struct_name": "deepmind.FCOpts"
+        }
+    },
+    "_struct_name": "deepmind.LayerOpts"
+}
