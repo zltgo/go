@@ -1,0 +1,27 @@
+#用户表
+type User {
+  id: ID!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+  name: String!
+}
+
+input NewUser {
+  id: ID!
+  name: String!
+  createdAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+
+type Query {
+  user(userId:ID!): User!
+}
+
+type Mutation {
+  newUser(input: NewUser): User
+}
+
+#type int64
+scalar Timestamp

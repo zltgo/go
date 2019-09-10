@@ -7,7 +7,7 @@ import (
 	. "gorgonia.org/gorgonia"
 )
 
-func main1() {
+func main() {
 	g := NewGraph()
 	x := NewTensor(g, Float32, 3, WithName("x"), WithShape(2, 3, 3), WithInit(RangedFrom(0)))
 	y := NewTensor(g, Float32, 3, WithName("y"), WithShape(2, 1, 3), WithInit(RangedFrom(0)))

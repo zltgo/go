@@ -9,7 +9,7 @@ import (
 	"gorgonia.org/tensor"
 )
 
-func main() {
+func main1() {
 	g := NewGraph()
 
 	xt := tensor.New(tensor.Of(tensor.Float32), tensor.WithShape(5), tensor.WithBacking([]float32{0.1, 0.2, 0.3, 0.3, 0.1}))

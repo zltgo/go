@@ -82,7 +82,7 @@ func main() {
 
 		handleError(vm.RunAll(), "RunAll")
 		// After running the machine, we want to update w and b
-		solver.Step(model.Learnables())
+		solver.Step(model.LearnablesGrad())
 		// move the pointer back to the beginning of the prog. Reset() does not delete any values
 		vm.Reset()
 

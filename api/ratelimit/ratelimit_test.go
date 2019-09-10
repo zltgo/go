@@ -15,7 +15,7 @@ func TestRatelimit(t *testing.T) {
 	Convey("should accurately rate-limit at small rates", t, func() {
 		var count int
 		rl := New(SecOpts(10, 60))
-		for !rl.Limit() {
+		for !rl.Reached() {
 			count++
 		}
 		So(count, ShouldEqual, 10)
@@ -24,7 +24,7 @@ func TestRatelimit(t *testing.T) {
 	Convey("should accurately rate-limit at large rates", t, func() {
 		var count int
 		rl := New(SecOpts(1000000, 3600))
-		for !rl.Limit() {
+		for !rl.Reached() {
 			count++
 		}
 		So(count, ShouldEqual, 1000000)
@@ -33,7 +33,7 @@ func TestRatelimit(t *testing.T) {
 	Convey("should accurately rate-limit at large intervals", t, func() {
 		var count int
 		rl := New(SecOpts(100, 360*24*3600))
-		for !rl.Limit() {
+		for !rl.Reached() {
 			count++
 		}
 		So(count, ShouldEqual, 100)
@@ -42,7 +42,7 @@ func TestRatelimit(t *testing.T) {
 	Convey("should accurately rate-limit with multi options", t, func() {
 		var count int
 		rl := New(SecOpts(1000, 60, 500, 600, 1000, 360*24*3600))
-		for !rl.Limit() {
+		for !rl.Reached() {
 			count++
 		}
 		So(count, ShouldEqual, 500)
@@ -52,11 +52,11 @@ func TestRatelimit(t *testing.T) {
 		n := 10
 		rl := New(Opts(time.Millisecond, n, 10))
 		for i := 0; i < n; i++ {
-			So(rl.Limit(), ShouldBeFalse)
+			So(rl.Reached(), ShouldBeFalse)
 		}
-		So(rl.Limit(), ShouldBeTrue)
+		So(rl.Reached(), ShouldBeTrue)
 		time.Sleep(10 * time.Millisecond)
-		So(rl.Limit(), ShouldBeFalse)
+		So(rl.Reached(), ShouldBeFalse)
 	})
 
 	Convey("should correctly spread allowance", t, func() {
@@ -64,7 +64,7 @@ func TestRatelimit(t *testing.T) {
 		rl := New(Opts(time.Millisecond, 10, 10))
 		start := time.Now()
 		for time.Now().Sub(start) < 49*time.Millisecond {
-			if !rl.Limit() {
+			if !rl.Reached() {
 				count++
 			}
 		}
@@ -82,7 +82,7 @@ func TestRatelimit(t *testing.T) {
 			go func(thread int) {
 				defer wg.Done()
 				for j := 0; j < n; j++ {
-					if rl.Limit() != false {
+					if rl.Reached() != false {
 						t.Error(fmt.Sprintf("thread %d, cycl %d", thread, j))
 						return
 					}
@@ -90,7 +90,7 @@ func TestRatelimit(t *testing.T) {
 			}(i)
 		}
 		wg.Wait()
-		So(rl.Limit(), ShouldBeTrue)
+		So(rl.Reached(), ShouldBeTrue)
 	})
 
 	Convey("should be thread-safe (10s)", t, func() {
@@ -106,7 +106,7 @@ func TestRatelimit(t *testing.T) {
 			go func(thread int) {
 				defer wg.Done()
 				for time.Now().Sub(start) < (10*time.Second - 10*time.Millisecond) {
-					if !rl.Limit() {
+					if !rl.Reached() {
 						atomic.AddInt32(&count, 1)
 					}
 					runtime.Gosched()
@@ -126,6 +126,6 @@ func BenchmarkLimit(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rl.Limit()
+		rl.Reached()
 	}
 }

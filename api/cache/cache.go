@@ -20,6 +20,9 @@ type Cache interface {
 	// If id does not exist, create a new value by fn.
 	Getsert(id interface{}, fn func() interface{}) (interface{}, error)
 
-	// Remove values  form cache by id.
+	// Remove values form cache by id.
 	Remove(id interface{}) error
+
+	// Clear purges all stored items from the cache.
+	Clear() 
 }

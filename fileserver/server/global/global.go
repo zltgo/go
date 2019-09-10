@@ -14,7 +14,7 @@ import (
 	"github.com/zltgo/fileserver/orm"
 	. "github.com/zltgo/fileserver/utils"
 
-	_ "github.com/go-sqlite3" //前面加'_'表示引入包（调用包的init），但是不引入包中的变量，函数等资源
+	_ "github.com/mattn/go-sqlite3" //前面加'_'表示引入包（调用包的init），但是不引入包中的变量，函数等资源
 )
 
 type Config struct {

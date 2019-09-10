@@ -1,0 +1,30 @@
+{
+	"GinMode": "test",
+	"HttpAddr": ":8888",
+	"AuthOpts": {
+		"AccessMaxAge": 1800,
+		"RefreshMaxAge": 0,
+		"HashKey": "",
+		"BlockKey": "",
+		"TokenKeys": [
+			"ACCESS-TOKEN",
+			"REFRESH-TOKEN"
+		]
+	},
+	"CookieRatelimit": [
+		20,
+		60,
+		100,
+		86400
+	],
+	"UrlRatelimit": null,
+	"AuthorityLimit": null,
+	"MongoUrl": "mongodb://localhost:27017/fisheep",
+	"WTimeout": 2000,
+	"CaptchaWide": 112,
+	"CaptchaHeight": 64,
+	"CaptchaDisturb": 8,
+	"CaptchaNum": 4,
+	"MaxUploadSize": 1048576,
+	"ExtTable": ",.gif,.jpg,.jpeg,.png,.bmp,.html,.txt,.pdf,"
+}

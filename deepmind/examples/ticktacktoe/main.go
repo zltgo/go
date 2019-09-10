@@ -77,7 +77,7 @@ func train(alice, bob input) (rv retVal, err error) {
 	xb := make([]float64, 27)
 	rd := rand.Intn(9)
 	xb[18+rd] = 1.0
-	xb := append(xb, xb...) //batch size = 2
+	xb = append(xb, xb...) //batch size = 2
 
 	x := NewMatrix(alice.g, tensor.Float64, WithShape(2, 27), WithBacking(xb))
 	for {

@@ -87,6 +87,14 @@ func (m *Model) Learnables() Nodes {
 	return m.learnables
 }
 
+func (m *Model) LearnablesGrad() []ValueGrad {
+	rv := make([]ValueGrad, len(m.learnables))
+	for i := 0; i < len(m.learnables); i++ {
+		rv[i] = m.learnables[i]
+	}
+	return rv
+}
+
 // get learnable node by name.
 func (m *Model) GetNode(name string) *Node {
 	return m.learnableMp[name]

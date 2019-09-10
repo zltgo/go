@@ -247,6 +247,20 @@ func TestSetDefault(t *testing.T) {
 		t.Error("         got:", toJson(tmp))
 	}
 
+	type Unnamed struct {
+		A string `default:"a"`
+		B struct {
+			C int   `default:"1"`
+			D []int `default:"2,3"`
+		}
+	}
+	var unnamed = Unnamed{}
+	SetDefault(&unnamed)
+	t.Log(unnamed.A, unnamed.B.C, unnamed.B.D)
+
+	form := make(map[string][]string)
+	StructToForm(unnamed, form)
+	t.Log(form)
 	return
 }
 
