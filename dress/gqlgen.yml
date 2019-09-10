@@ -1,0 +1,81 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+
+schema:
+ - schema/*.graphql
+
+# Let gqlgen know where to put the generated server
+exec:
+  filename: graph/generated_server.go
+  package: graph
+  
+# Let gqlgen know where to put the generated models (if any)
+model:
+  filename: graph/generated_types.go
+  package: graph
+  
+# Optional, turns on resolver stub generation
+resolver:
+  filename: graph/resolver.go # where to write them
+  type: Resolver  # what's the resolver root implementation type called?
+
+# Optional, turns on binding to field names by tag provided
+struct_tag: json
+
+
+# Tell gqlgen about any existing models you want to reuse for
+# graphql. These normally come from the db or a remote api.
+models:
+  Account:
+    model: github.com/zltgo/dress/model.Account
+    fields:
+      stores:
+        resolver: true # force a resolver to be generated
+      manager:
+        resolver: true # force a resolver to be generated
+  AccountsConnection:
+    model: github.com/zltgo/dress/graph.AccountsConnection
+  AccountsEdge:
+    model: github.com/zltgo/dress/graph.AccountsEdge
+  AccountFilter:
+    model: github.com/zltgo/dress/model.AccountFilter
+  User:
+    model: github.com/zltgo/dress/model.User
+  Store:
+    model: github.com/zltgo/dress/model.Store
+    fields:
+      users:
+        resolver: true # force a resolver to be generated
+  Timestamp:
+    model: github.com/zltgo/webkit/graphorm.Timestamp
+  MD5:
+    model: github.com/zltgo/webkit/graphorm.MD5
+  AuthToken:
+    model: github.com/zltgo/webkit/jwt.AuthToken
+  AuthForm:
+    model: github.com/zltgo/dress/model.AuthForm
+  NewUser:
+    model: github.com/zltgo/dress/model.NewUser
+  NewAccount:
+    model: github.com/zltgo/dress/model.NewAccount
+  NewStore:
+    model: github.com/zltgo/dress/model.NewStore
+  ModUser:
+    model: github.com/zltgo/dress/model.ModUser
+  ModManager:
+    model: github.com/zltgo/dress/model.ModManager
+  ModAccount:
+    model: github.com/zltgo/dress/model.ModAccount
+  ModStore:
+    model: github.com/zltgo/dress/model.ModStore
+
+  # The GraphQL type ID is backed by 
+  ID: 
+    # model also accepts multiple backing go types. When mapping onto structs
+    # any of these types can be used, the first one is used as the default for
+    # resolver args.
+    model:
+      - github.com/zltgo/webkit/graphorm.UUID

@@ -1,0 +1,60 @@
+#type GoodsModel struct {
+#	Id             string `gorm:"primary_key" json:"id"`
+#	Name           string `gorm:"not null" json:"name"`
+#	Model          string `gorm:"not null" json:"model"`
+#	Specifications string `json:"specifications"`
+#	UnitName       string `gorm:"not null" json:"unit_name"`
+#	MaxInventory   uint   `json:"max_inventory"`
+#	MinInventory   uint   `json:"min_inventory"`
+#}
+
+#type InventoryModel struct {
+#	Id        string     `gorm:"primary_key" json:"-"`
+#	Goods     GoodsModel `gorm:"foreignkey:Id";association_foreignkey:Id" json:"goods"`
+#	Number    uint       `json:"number"`
+#	UnitPrice float64    `json:"unit_price"`
+#}
+
+
+type Query {
+  #tokens
+  adminToken(name:String!, password:String!): AuthToken!
+  authToken(input: AuthForm!): AuthToken!
+  refreshToken: AuthToken!
+
+  accountId(mobile:String!): ID!
+  account(id:ID!): Account!
+  user(id:ID!): User!
+  store(id:ID!): Store!
+
+  # search accounts
+  accountsConnection(filter: AccountFilter, first: Int!, after: ID): AccountsConnection!
+}
+
+type Mutation {
+  newAccount(input: NewAccount!): Account!
+  newUser(input: NewUser!): User!
+  newStore(input: NewStore!): Store!
+
+  modAccount(input: ModAccount!):Boolean!
+  modUser(input: ModUser!):Boolean!
+  modStore(input: ModStore!):Boolean!
+  modManager(input:ModManager!):Boolean!
+
+  disableAccount(accountId: ID!): Boolean!
+  disableUser(userId: ID!): Boolean!
+  disableStore(storeId: ID!): Boolean!
+
+  enableAccount(accountId: ID!): Boolean!
+  enableUser(userId: ID!): Boolean!
+  enableStore(storeId: ID!): Boolean!
+}
+
+scalar Timestamp
+
+# Information for paginating this connection
+type PageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
+}

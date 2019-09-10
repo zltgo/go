@@ -1,0 +1,165 @@
+#账户表，只能系统管理员操作
+type Account {
+  id: ID!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+
+  corp: String!         #公司名称
+  managerId: ID!        #管理员Id,在“$accountId_users”表中
+  mobile: String!        #联系方式
+  maxStores: Int!       #允许开设的最大分店数
+  maxUsersPerStore:Int! #限制每个店的员工数量
+  remarks: String!      #备注
+  expiresAt: Timestamp!  #账户到期时间
+
+  #管理员
+  manager: User!
+  stores(unscoped:Boolean! = false):[Store!]!
+}
+
+# Account查询分页
+type AccountsConnection {
+  totalCount: Int! #总记录条数
+  edges: [AccountsEdge!]!
+  # A list of the accounts, as a convenience when edges are not needed.
+  accounts: [Account!]!
+  pageInfo: PageInfo!
+}
+
+# An edge object for accounts
+type AccountsEdge {
+  cursor: ID!
+  node: Account
+}
+
+#用户表
+type User {
+  id: ID!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+  
+  accountId: ID!       #账户ID
+  empno: String!       #工号，为001这种字符串
+  realName: String!    #真实姓名
+  role: String!        #角色名，管理员，店长，店员等
+  storeId: ID          #分店ID，管理员的分店ID为null
+
+  #关联的门店，管理员会返回null
+  store: Store
+  account: Account!
+}
+
+#分店信息表
+type Store {
+  id: ID!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+  
+  accountId: ID!       #账户ID
+  name: String!        #分店名称
+  remarks: String!      #备注
+
+  #该门店下的所有店员
+  users(unscoped:Boolean! = false): [User!]!
+}
+
+type AuthToken  {
+	accessToken:  String!
+	refreshToken: String!
+	maxAge:       Int! #lifetime in seconds
+}
+
+#账户查询条件
+input AccountFilter {
+  createdAt: [Timestamp] #账户创建时间范围
+  updatedAt: [Timestamp] #账户更新时间范围
+  expiresAt: [Timestamp] #账户到期时间范围
+  unscoped: Int!          #0:只返回在用的记录 1：所有记录 2：只返回已停用的记录
+
+  corp: String!         #公司名称, like查询
+  mobile: String!       #联系方式, like查询
+  remarks: String!      #备注, like查询
+
+  maxStores: [Int]       #允许开设的最大分店数
+  maxUsersPerStore:[Int] #限制每个店的员工数量
+  orders: [String!] #排序
+}
+
+#新建一个账户
+input NewAccount {
+  #管理员信息，每个账户只有一个管理员
+  empno: String!      #管理员工号，默认可以设为000，后续可以更改
+  password: String!
+  realName: String!   #真实姓名
+  mobile: String!     #联系方式
+  
+  #账户信息
+  corp: String!          #公司名称
+  maxStores: Int!        #允许开设的最大分店数
+  maxUsersPerStore: Int! #单个店铺最多用户数量
+  expiresAt: Timestamp!  #账户到期时间
+  remarks: String!       #备注
+}
+
+#更新账户信息
+input ModAccount {
+  id: ID!       #账户ID
+  mobile: String!      #联系方式
+  corp: String!        #公司名称
+  maxStores: Int!      #允许开设的最大分店数
+  maxUsersPerStore:Int! #单个店铺最多用户数量
+  expiresAt: Timestamp! #账户到期时间
+  remarks: String!      #备注
+}
+
+#新建一个用户，由账户管理员操作，继承管理员部分属性
+input NewUser {
+  accountId: ID!       #账户ID
+  storeId: ID!         #分店名称，需要事先创建分店
+  empno: String!       #工号，为001这种字符串
+  password: String!    #密码，8到32位字符串
+  realName: String!    #真实姓名
+  role: String!        #角色名，管理员，店长，店员等
+}
+
+#修改用户信息
+input ModUser {
+  id: ID!          #用户ID
+  empno: String!       #工号，为001这种字符串
+  password: String!    #密码，8到32位字符串
+  realName: String!    #真实姓名
+  role: String!        #角色名，管理员，店长，店员等
+  storeId: ID!         #分店名称，需要事先创建分店
+}
+
+#修改管理员信息
+input ModManager {
+  id: ID!          #用户ID
+  empno: String!       #工号，为001这种字符串
+  password: String!    #密码，8到32位字符串
+  realName: String!    #真实姓名
+}
+
+#新建一个分店
+input NewStore {
+  accountId: ID!       #账户ID
+  name: String!        #分店名称
+  remarks: String!     #备注
+}
+
+#修改分店名
+input ModStore {
+  id: ID!         #账户ID
+  name: String!        #分店名称
+  remarks: String!     #备注
+}
+
+#登录
+input AuthForm  {
+	accountID: ID!      #账户ID
+	empno:     String!  #工号
+	password:  String!  #密码
+}
